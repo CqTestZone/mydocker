@@ -1,0 +1,64 @@
+version: '2'
+
+services:
+  mariadb:
+    image: 'bitnami/mariadb:latest'
+    ports:
+      - '33306:3306'
+    volumes:
+      - 'mariadb_data:/bitnami/mariadb'
+      
+  mysql:
+    image: mysql:latest
+    ports:
+      - '33307:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=bugtracker
+      - MYSQL_USER=mantisbt
+      - MYSQL_PASSWORD=mantisbt
+    restart: always
+    
+  testlink:
+    image: 'bitnami/testlink:latest'
+    ports:
+      - '33308:80'
+      - '33443:443'
+    links
+      - mysql
+      - mantisbt
+      - redmine
+    volumes:
+      - 'testlink_data:/bitnami/testlink'
+      - 'apache_data:/bitnami/apache'
+    depends_on:
+      - mariadb
+    
+  redmine:
+    image: 'bitnami/redmine:latest'
+    ports:
+      - '33309:3000'
+    volumes:
+      - 'redmine_data:/bitnami/redmine'
+    depends_on:
+      - mariadb
+    
+  mantisbt:
+    image: vimagick/mantisbt:latest
+    ports:
+      - '33310:80'
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    restart: always
+
+volumes:
+  mariadb_data:
+    driver: local
+  testlink_data:
+    driver: local
+  apache_data:
+    driver: local
+  redmine_data:
+    driver: local
